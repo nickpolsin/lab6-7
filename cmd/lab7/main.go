@@ -92,7 +92,7 @@ func main() {
 	router.GET("/query2", func(c *gin.Context) {
 		table := "<table class='table'><thead><tr>"
 		// put your query here
-		rows, err := db.Query("SELECT * FROM table1") // <--- EDIT THIS LINE
+		rows, err := db.Query("SELECT title, cost FROM Album WHERE cost = (SELECT MIN(cost) FROM Album)") // <--- EDIT THIS LINE
 		if err != nil {
 			// careful about returning errors to the user!
 			c.AbortWithError(http.StatusInternalServerError, err)
@@ -108,9 +108,11 @@ func main() {
 		// once you've added all the columns in, close the header
 		table += "</thead><tbody>"
 		// columns
+		var title string
+		var cost string
 		for rows.Next() {
-			// rows.Scan() // put columns here prefaced with &
-			table += "<tr><td></td></tr>" // <--- EDIT THIS LINE
+			rows.Scan(&title, &cost) // put columns here prefaced with &
+			table += "<tr><td>" + title + "</td><td>" + /*strconv.FormatFloat(cost, 'f', 2, 32)*/cost + "</td></tr>"// <--- EDIT THIS LINE
 		}
 		// finally, close out the body and table
 		table += "</tbody></table>"
@@ -120,7 +122,7 @@ func main() {
 	router.GET("/query3", func(c *gin.Context) {
 		table := "<table class='table'><thead><tr>"
 		// put your query here
-		rows, err := db.Query("SELECT * FROM table1") // <--- EDIT THIS LINE
+		rows, err := db.Query("SELECT person.firstName, person.favoriteGenre, song.title, album.genre FROM Person JOIN Favorite ON favorite.personId = person.personId JOIN Song ON favorite.songId = song.songId JOIN Album ON song.albumId = album.albumId WHERE person.favoriteGenre = album.genre;") // <--- EDIT THIS LINE
 		if err != nil {
 			// careful about returning errors to the user!
 			c.AbortWithError(http.StatusInternalServerError, err)
@@ -136,9 +138,13 @@ func main() {
 		// once you've added all the columns in, close the header
 		table += "</thead><tbody>"
 		// columns
+		var firstName string
+		var favoriteGenre string
+		var title string
+		var genre string
 		for rows.Next() {
-			// rows.Scan() // put columns here prefaced with &
-			table += "<tr><td></td></tr>" // <--- EDIT THIS LINE
+			rows.Scan(&firstName, &favoriteGenre, &title, &genre) // put columns here prefaced with &
+			table += "<tr><td>" + firstName+ "</td><td>" + favoriteGenre + "</td><td>" + title + "</td><td>" + genre + "</td></tr>" // <--- EDIT THIS LINE
 		}
 		// finally, close out the body and table
 		table += "</tbody></table>"
