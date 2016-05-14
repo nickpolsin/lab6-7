@@ -9,7 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
+	//"strconv"
 
 	// this allows us to run our web server
 	"github.com/gin-gonic/gin"
@@ -58,7 +58,7 @@ func main() {
 	router.GET("/query1", func(c *gin.Context) {
 		table := "<table class='table'><thead><tr>"
 		// put your query here
-		rows, err := db.Query("SELECT * FROM table1") // <--- EDIT THIS LINE
+		rows, err := db.Query("SELECT person.firstName, song.title, MIN(album.releaseDate) OVER (PARTITION BY album.releaseDate) FROM Person JOIN favorite ON person.personId = favorite.personId JOIN song ON Song.songId = favorite.songId JOIN Album ON song.albumId = album.albumId;") // <--- EDIT THIS LINE
 		if err != nil {
 			// careful about returning errors to the user!
 			c.AbortWithError(http.StatusInternalServerError, err)
@@ -74,14 +74,15 @@ func main() {
 		// once you've added all the columns in, close the header
 		table += "</thead><tbody>"
 		// declare all your RETURNED columns here
-		var id int      // <--- EDIT THESE LINES
-		var name string //<--- ^^^^
+		var firstName string      // <--- EDIT THESE LINES
+		var title string
+		var releaseDate string //<--- ^^^^
 		for rows.Next() {
 			// assign each of them, in order, to the parameters of rows.Scan.
 			// preface each variable with &
-			rows.Scan(&id, &name) // <--- EDIT THIS LINE
+			rows.Scan(&firstName, &title, &releaseDate) // <--- EDIT THIS LINE
 			// can't combine ints and strings in Go. Use strconv.Itoa(int) instead
-			table += "<tr><td>" + strconv.Itoa(id) + "</td><td>" + name + "</td></tr>" // <--- EDIT THIS LINE
+			table += "<tr><td>" + firstName + "</td><td>" + title + "</td><td>" + releaseDate + "</td></tr>" // <--- EDIT THIS LINE
 		}
 		// finally, close out the body and table
 		table += "</tbody></table>"
