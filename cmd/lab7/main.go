@@ -62,11 +62,13 @@ func main() {
 		if err != nil {
 			// careful about returning errors to the user!
 			c.AbortWithError(http.StatusInternalServerError, err)
+			return
 		}
 		// foreach loop over rows.Columns, using value
 		cols, _ := rows.Columns()
 		if len(cols) == 0 {
 			c.AbortWithStatus(http.StatusNoContent)
+			return
 		}
 		for _, value := range cols {
 			table += "<th class='text-center'>" + value + "</th>"
@@ -96,11 +98,13 @@ func main() {
 		if err != nil {
 			// careful about returning errors to the user!
 			c.AbortWithError(http.StatusInternalServerError, err)
+			return
 		}
 		// foreach loop over rows.Columns, using value
 		cols, _ := rows.Columns()
 		if len(cols) == 0 {
 			c.AbortWithStatus(http.StatusNoContent)
+			return
 		}
 		for _, value := range cols {
 			table += "<th class='text-center'>" + value + "</th>"
@@ -126,11 +130,13 @@ func main() {
 		if err != nil {
 			// careful about returning errors to the user!
 			c.AbortWithError(http.StatusInternalServerError, err)
+			return
 		}
 		// foreach loop over rows.Columns, using value
 		cols, _ := rows.Columns()
 		if len(cols) == 0 {
 			c.AbortWithStatus(http.StatusNoContent)
+			return
 		}
 		for _, value := range cols {
 			table += "<th class='text-center'>" + value + "</th>"
@@ -149,6 +155,38 @@ func main() {
 		// finally, close out the body and table
 		table += "</tbody></table>"
 		c.Data(http.StatusOK, "text/html", []byte(table))
+	})
+
+	router.POST("/login", func(c *gin.Context) {
+		// this is meant for SQL injection examples ONLY.
+		// Don't copy this for use in an actual environment, even if you do stop SQL injection
+		username := c.PostForm("username")
+		password := c.PostForm("password")
+
+		rows, err := db.Query("SELECT usr.name FROM usr WHERE usr.name = '" + username + "' AND usr.password = '" + password + "';")
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		cols, _ := rows.Columns()
+		if len(cols) == 0 {
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+
+		rowCount := 0
+		var resultUser string
+		for rows.Next() {
+			rows.Scan(&resultUser)
+			rowCount++
+		}
+		// quick way to check if the user logged in properly
+		if rowCount == 0 {
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+		// instead of HTML, we are going to return a JSON file
+		c.JSON(http.StatusOK, gin.H{"username": resultUser})
 	})
 
 	// NO code should go after this line. it won't ever reach that point
